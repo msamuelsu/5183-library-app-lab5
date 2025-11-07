@@ -2,6 +2,7 @@
 const express = require('express');
 const app = express();
 const os = require('os');
+const path = require('path');
 const { books } = require('./data.cjs');
 const { newId, validateBookPayload } = require('./util.cjs');
 
@@ -60,6 +61,15 @@ app.delete('/api/books/:id', (req, res) => {
   if (idx === -1) return res.status(404).json({ error: 'not found' });
   const [removed] = books.splice(idx, 1);
   return res.status(200).json(removed);
+});
+
+// --- Serve Vite build output in production ---
+const distDir = path.join(__dirname, '..', 'web', 'dist');
+app.use(express.static(distDir));
+
+// SPA fallback: send index.html for non-API routes
+app.get(/^\/(?!api).*/, (req, res) => {
+res.sendFile(path.join(distDir, 'index.html'));
 });
 
 // start server (default 3000 locally; Lab 5 will use :80 via systemd)
